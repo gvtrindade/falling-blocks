@@ -3,9 +3,13 @@ import Block from "../game_objects/block";
 import Cone from "../game_objects/cone";
 
 let blocks: Block[] = [];
-let positions: number[] = [];
-let numPositions = 0;
+let xPositions: number[] = [];
+let numXPositions = 0;
 let spawnedPositions: number[] = [];
+let firstConeX = 1.5;
+const coneSpacing = 0.3;
+const coneSize = 2.5;
+
 let cameraSize: Vector2;
 
 export function resetSprites(initialState = false) {
@@ -18,12 +22,44 @@ export function resetSprites(initialState = false) {
 
   if (initialState) {
     cameraSize = getCameraSize();
-    for (let x = 0.05; x < 0.95; x += 0.1) {
-      new Cone(vec2(cameraSize.x * x, cameraSize.y * 0.15));
-      numPositions++;
-      positions.push(x);
+    xPositions.push(firstConeX);
+    let numCones = populateLineWithBlocks(
+      firstConeX,
+      coneSpacing,
+      coneSize,
+      cameraSize.x
+    );
+
+    for (let x = 0; x < numCones; x++) {
+      new Cone(vec2(firstConeX, cameraSize.y * 0.15), coneSize);
+      firstConeX += coneSize + coneSpacing;
+      xPositions.push(firstConeX);
     }
+
+    numXPositions = xPositions.length;
+    console.log(xPositions)
   }
+}
+
+function populateLineWithBlocks(
+  margin: number,
+  spacing: number,
+  coneSize: number,
+  availableWidth: number
+) {
+  let numBlocks = 0;
+  let totalWidth = 0;
+
+  availableWidth -= margin * 2;
+
+  while (totalWidth <= availableWidth) {
+    totalWidth += coneSize + spacing;
+    numBlocks++;
+  }
+  
+  numBlocks++;
+
+  return numBlocks;
 }
 
 export function dropBlock(speed: number) {
@@ -31,14 +67,14 @@ export function dropBlock(speed: number) {
     spawnedPositions.shift();
   }
 
-  let num = randInt(0, positions.length);
+  let num = randInt(0, numXPositions);
   while (spawnedPositions.includes(num)) {
-    num = randInt(0, positions.length);
+    num = randInt(0, numXPositions);
   }
   spawnedPositions.push(num);
 
   const block = new Block(
-    vec2(cameraSize.x * positions[num], cameraSize.y * 1.1)
+    vec2(xPositions[num], cameraSize.y * 1.1)
   );
   blocks.push(block);
   block.fall(speed);
